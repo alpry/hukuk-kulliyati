@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import type { ColorScheme } from '@/lib/kanun-colors'
 
 type Madde = {
@@ -9,6 +9,11 @@ type Madde = {
   madde_no: number
   path: string | null
   baslik: string | null
+}
+
+type Note = {
+  id: string
+  icerik: string
 }
 
 type TreeNode = {
@@ -38,6 +43,14 @@ function countAll(node: TreeNode): number {
     Array.from(node.children.values()).reduce((s, c) => s + countAll(c), 0)
 }
 
+function sortNodes(nodes: TreeNode[]): TreeNode[] {
+  return [...nodes].sort((a, b) => {
+    const score = (t: string) =>
+      t.toLowerCase().includes('genel') ? -1 : t.toLowerCase().includes('özel') ? 1 : 0
+    return score(a.title) - score(b.title)
+  })
+}
+
 function Chevron({ open, cs }: { open: boolean; cs: ColorScheme }) {
   return (
     <svg
@@ -50,48 +63,164 @@ function Chevron({ open, cs }: { open: boolean; cs: ColorScheme }) {
   )
 }
 
-function MaddeRow({ m, kanunId, cs, hasNote }: {
-  m: Madde
-  kanunId: string
-  cs: ColorScheme
-  hasNote: boolean
-}) {
+function ExpandedMadde({ m, cs }: { m: Madde; cs: ColorScheme }) {
+  const [metin, setMetin] = useState<string | null>(null)
+  const [note, setNote] = useState<Note | null>(null)
+  const [noteText, setNoteText] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      const [maddeRes, userRes] = await Promise.all([
+        supabase.from('maddeler').select('metin').eq('id', m.id).single(),
+        supabase.auth.getUser(),
+      ])
+      if (cancelled) return
+      setMetin(maddeRes.data?.metin || '')
+      const user = userRes.data.user
+      if (user) {
+        setUserId(user.id)
+        const noteRes = await supabase
+          .from('notlar')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('madde_id', Number(m.id))
+          .maybeSingle()
+        if (cancelled) return
+        if (noteRes.data) {
+          setNote(noteRes.data)
+          setNoteText(noteRes.data.icerik)
+        }
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [m.id])
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+    }
+  }, [noteText, metin])
+
+  async function handleSave() {
+    if (!userId || !noteText.trim()) return
+    setSaving(true)
+    if (note) {
+      await supabase
+        .from('notlar')
+        .update({ icerik: noteText, updated_at: new Date().toISOString() })
+        .eq('id', note.id)
+    } else {
+      const { data } = await supabase
+        .from('notlar')
+        .insert({ madde_id: Number(m.id), icerik: noteText, user_id: userId })
+        .select()
+        .single()
+      if (data) setNote(data)
+    }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  if (metin === null) {
+    return (
+      <div className="px-4 py-5 flex justify-center">
+        <div
+          className="w-5 h-5 rounded-full border-2 border-slate-100 animate-spin"
+          style={{ borderTopColor: cs.primary }}
+        />
+      </div>
+    )
+  }
+
   return (
-    <Link
-      href={`/dashboard/kanun/${kanunId}/madde/${m.id}`}
-      className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors group border-l-2"
-      style={{ borderLeftColor: hasNote ? cs.primary : 'transparent' }}
-    >
-      <span
-        className="text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0 tabular-nums"
-        style={{ backgroundColor: cs.light, color: cs.primary }}
-      >
-        Madde {m.madde_no}
-      </span>
-      {m.baslik && (
-        <span className="text-sm text-slate-600 flex-1 truncate">{m.baslik}</span>
-      )}
-      <svg
-        className="w-3.5 h-3.5 shrink-0 ml-auto text-slate-300 group-hover:text-slate-400 transition-colors"
-        fill="none" stroke="currentColor" viewBox="0 0 24 24"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
-    </Link>
+    <div className="px-4 pb-5">
+      <p className="text-sm text-slate-700 leading-8 whitespace-pre-line mb-5 pt-1">
+        {metin}
+      </p>
+
+      <div className="border-t border-slate-100 pt-4">
+        <div className="flex items-center gap-1.5 mb-2">
+          <svg className="w-3.5 h-3.5 shrink-0" style={{ color: cs.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span className="text-xs font-semibold text-slate-600">Notlarım</span>
+        </div>
+
+        <textarea
+          ref={textareaRef}
+          value={noteText}
+          onChange={e => setNoteText(e.target.value)}
+          placeholder="Bu madde için not ekle..."
+          rows={3}
+          className="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 transition-shadow"
+          onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}28` }}
+          onBlur={e => { e.target.style.boxShadow = '' }}
+        />
+
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-slate-400">{noteText.length} karakter</span>
+          <button
+            onClick={handleSave}
+            disabled={saving || !noteText.trim()}
+            className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40"
+            style={{ backgroundColor: cs.primary }}
+          >
+            {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
-function Section({ node, kanunId, cs, noteSet, depth }: {
+function MaddeRow({ m, cs, hasNote }: { m: Madde; cs: ColorScheme; hasNote: boolean }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div
+      className="border-l-2 transition-colors"
+      style={{ borderLeftColor: hasNote ? cs.primary : 'transparent' }}
+    >
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left hover:bg-slate-50"
+        style={open ? { backgroundColor: `${cs.light}` } : undefined}
+      >
+        <span
+          className="text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0 tabular-nums"
+          style={{ backgroundColor: cs.light, color: cs.primary }}
+        >
+          Madde {m.madde_no}
+        </span>
+        {m.baslik && (
+          <span className="text-sm text-slate-600 flex-1 leading-snug">{m.baslik}</span>
+        )}
+        <Chevron open={open} cs={cs} />
+      </button>
+
+      {open && <ExpandedMadde m={m} cs={cs} />}
+    </div>
+  )
+}
+
+function Section({ node, cs, noteSet, depth }: {
   node: TreeNode
-  kanunId: string
   cs: ColorScheme
   noteSet: Set<string>
   depth: number
 }) {
-  const [open, setOpen] = useState(depth === 0)
+  const [open, setOpen] = useState(false)
   const total = countAll(node)
-  const hasChildren = node.children.size > 0
-  const hasMaddeler = node.maddeler.length > 0
+  const sortedChildren = sortNodes(Array.from(node.children.values()))
 
   if (depth === 0) {
     return (
@@ -114,13 +243,13 @@ function Section({ node, kanunId, cs, noteSet, depth }: {
 
         {open && (
           <div className="border-t border-slate-100 bg-slate-50/70 p-3 space-y-2">
-            {Array.from(node.children.values()).map(child => (
-              <Section key={child.title} node={child} kanunId={kanunId} cs={cs} noteSet={noteSet} depth={1} />
+            {sortedChildren.map(child => (
+              <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={1} />
             ))}
-            {hasMaddeler && (
+            {node.maddeler.length > 0 && (
               <div className="bg-white rounded-xl ring-1 ring-black/5 overflow-hidden divide-y divide-slate-50">
                 {node.maddeler.map(m => (
-                  <MaddeRow key={m.id} m={m} kanunId={kanunId} cs={cs} hasNote={noteSet.has(String(m.id))} />
+                  <MaddeRow key={m.id} m={m} cs={cs} hasNote={noteSet.has(String(m.id))} />
                 ))}
               </div>
             )}
@@ -155,17 +284,17 @@ function Section({ node, kanunId, cs, noteSet, depth }: {
 
       {open && (
         <div className="border-t border-slate-100">
-          {hasChildren && (
+          {sortedChildren.length > 0 && (
             <div className="p-2 space-y-1.5 bg-slate-50/50">
-              {Array.from(node.children.values()).map(child => (
-                <Section key={child.title} node={child} kanunId={kanunId} cs={cs} noteSet={noteSet} depth={depth + 1} />
+              {sortedChildren.map(child => (
+                <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={depth + 1} />
               ))}
             </div>
           )}
-          {hasMaddeler && (
+          {node.maddeler.length > 0 && (
             <div className="divide-y divide-slate-50">
               {node.maddeler.map(m => (
-                <MaddeRow key={m.id} m={m} kanunId={kanunId} cs={cs} hasNote={noteSet.has(String(m.id))} />
+                <MaddeRow key={m.id} m={m} cs={cs} hasNote={noteSet.has(String(m.id))} />
               ))}
             </div>
           )}
@@ -175,20 +304,20 @@ function Section({ node, kanunId, cs, noteSet, depth }: {
   )
 }
 
-export default function KanunAccordion({ maddeler, kanunId, noteIds, colorScheme }: {
+export default function KanunAccordion({ maddeler, noteIds, colorScheme }: {
   maddeler: Madde[]
   kanunId: string
   noteIds: string[]
   colorScheme: ColorScheme
 }) {
   const root = buildTree(maddeler)
-  const sections = Array.from(root.children.values())
+  const sections = sortNodes(Array.from(root.children.values()))
   const noteSet = new Set(noteIds)
 
   return (
     <div className="space-y-2">
       {sections.map(s => (
-        <Section key={s.title} node={s} kanunId={kanunId} cs={colorScheme} noteSet={noteSet} depth={0} />
+        <Section key={s.title} node={s} cs={colorScheme} noteSet={noteSet} depth={0} />
       ))}
     </div>
   )
