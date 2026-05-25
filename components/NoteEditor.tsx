@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { ColorScheme } from '@/lib/kanun-colors'
 
 interface Note {
   id: string
@@ -11,9 +12,11 @@ interface Note {
 export default function NoteEditor({
   maddeId,
   existingNote,
+  colorScheme,
 }: {
   maddeId: string
   existingNote: Note | null
+  colorScheme: ColorScheme
 }) {
   const [icerik, setIcerik] = useState(existingNote?.icerik || '')
   const [saving, setSaving] = useState(false)
@@ -62,14 +65,21 @@ export default function NoteEditor({
     setIcerik('')
   }
 
+  const cs = colorScheme
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-700">Notlarım</h3>
+    <div className="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: cs.primary }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <h3 className="text-sm font-semibold text-slate-800">Notlarım</h3>
+        </div>
         {existingNote && icerik && (
           <button
             onClick={handleDelete}
-            className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+            className="text-xs text-slate-400 hover:text-red-500 transition-colors"
           >
             Notu Sil
           </button>
@@ -81,17 +91,19 @@ export default function NoteEditor({
         onChange={e => setIcerik(e.target.value)}
         placeholder="Bu madde için notunuzu buraya yazın..."
         rows={6}
-        className="w-full text-sm border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+        className="w-full text-sm text-slate-800 border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent resize-none placeholder:text-slate-400 transition-shadow"
+        style={{ '--tw-ring-color': cs.primary } as React.CSSProperties}
+        onFocus={e => { e.target.style.boxShadow = `0 0 0 2px ${cs.light}, 0 0 0 4px ${cs.primary}40` }}
+        onBlur={e => { e.target.style.boxShadow = '' }}
       />
 
       <div className="flex items-center justify-between mt-3">
-        <span className="text-xs text-gray-400">
-          {icerik.length} karakter
-        </span>
+        <span className="text-xs text-slate-400">{icerik.length} karakter</span>
         <button
           onClick={handleSave}
           disabled={saving || !icerik.trim()}
-          className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="text-white text-sm px-5 py-2 rounded-xl font-medium transition-all disabled:opacity-40"
+          style={{ backgroundColor: saving || !icerik.trim() ? '#94a3b8' : cs.primary }}
         >
           {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
         </button>
