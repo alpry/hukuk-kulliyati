@@ -63,7 +63,7 @@ function Chevron({ open, cs }: { open: boolean; cs: ColorScheme }) {
   )
 }
 
-function ExpandedMadde({ m, cs }: { m: Madde; cs: ColorScheme }) {
+function MaddeCard({ m, cs, hasNote }: { m: Madde; cs: ColorScheme; hasNote: boolean }) {
   const [metin, setMetin] = useState<string | null>(null)
   const [note, setNote] = useState<Note | null>(null)
   const [noteText, setNoteText] = useState('')
@@ -130,71 +130,12 @@ function ExpandedMadde({ m, cs }: { m: Madde; cs: ColorScheme }) {
     setTimeout(() => setSaved(false), 2000)
   }
 
-  if (metin === null) {
-    return (
-      <div className="px-4 py-5 flex justify-center">
-        <div
-          className="w-5 h-5 rounded-full border-2 border-slate-100 animate-spin"
-          style={{ borderTopColor: cs.primary }}
-        />
-      </div>
-    )
-  }
-
-  return (
-    <div className="px-4 pb-5">
-      <p className="text-sm text-slate-700 leading-8 whitespace-pre-line mb-5 pt-1">
-        {metin}
-      </p>
-
-      <div className="border-t border-slate-100 pt-4">
-        <div className="flex items-center gap-1.5 mb-2">
-          <svg className="w-3.5 h-3.5 shrink-0" style={{ color: cs.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          <span className="text-xs font-semibold text-slate-600">Notlarım</span>
-        </div>
-
-        <textarea
-          ref={textareaRef}
-          value={noteText}
-          onChange={e => setNoteText(e.target.value)}
-          placeholder="Bu madde için not ekle..."
-          rows={3}
-          className="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 transition-shadow"
-          onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}28` }}
-          onBlur={e => { e.target.style.boxShadow = '' }}
-        />
-
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-xs text-slate-400">{noteText.length} karakter</span>
-          <button
-            onClick={handleSave}
-            disabled={saving || !noteText.trim()}
-            className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40"
-            style={{ backgroundColor: cs.primary }}
-          >
-            {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MaddeRow({ m, cs, hasNote }: { m: Madde; cs: ColorScheme; hasNote: boolean }) {
-  const [open, setOpen] = useState(false)
-
   return (
     <div
-      className="border-l-2 transition-colors"
+      className="border-l-2 px-5 py-4"
       style={{ borderLeftColor: hasNote ? cs.primary : 'transparent' }}
     >
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left hover:bg-slate-50"
-        style={open ? { backgroundColor: `${cs.light}` } : undefined}
-      >
+      <div className="flex items-center gap-2.5 mb-3">
         <span
           className="text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0 tabular-nums"
           style={{ backgroundColor: cs.light, color: cs.primary }}
@@ -202,12 +143,49 @@ function MaddeRow({ m, cs, hasNote }: { m: Madde; cs: ColorScheme; hasNote: bool
           Madde {m.madde_no}
         </span>
         {m.baslik && (
-          <span className="text-sm text-slate-600 flex-1 leading-snug">{m.baslik}</span>
+          <span className="text-sm font-medium text-slate-700">{m.baslik}</span>
         )}
-        <Chevron open={open} cs={cs} />
-      </button>
+      </div>
 
-      {open && <ExpandedMadde m={m} cs={cs} />}
+      {metin === null ? (
+        <div className="py-3 flex justify-center">
+          <div
+            className="w-4 h-4 rounded-full border-2 border-slate-100 animate-spin"
+            style={{ borderTopColor: cs.primary }}
+          />
+        </div>
+      ) : (
+        <>
+          <p className="text-sm text-slate-700 leading-8 whitespace-pre-line mb-5">
+            {metin}
+          </p>
+
+          <div className="border-t border-slate-100 pt-4">
+            <textarea
+              ref={textareaRef}
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+              placeholder="Not ekle..."
+              rows={2}
+              className="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 transition-shadow"
+              onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}28` }}
+              onBlur={e => { e.target.style.boxShadow = '' }}
+            />
+            {noteText.trim() && (
+              <div className="flex items-center justify-end mt-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40"
+                  style={{ backgroundColor: cs.primary }}
+                >
+                  {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -247,9 +225,9 @@ function Section({ node, cs, noteSet, depth }: {
               <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={1} />
             ))}
             {node.maddeler.length > 0 && (
-              <div className="bg-white rounded-xl ring-1 ring-black/5 overflow-hidden divide-y divide-slate-50">
+              <div className="bg-white rounded-xl ring-1 ring-black/5 overflow-hidden divide-y divide-slate-100">
                 {node.maddeler.map(m => (
-                  <MaddeRow key={m.id} m={m} cs={cs} hasNote={noteSet.has(String(m.id))} />
+                  <MaddeCard key={m.id} m={m} cs={cs} hasNote={noteSet.has(String(m.id))} />
                 ))}
               </div>
             )}
@@ -292,9 +270,9 @@ function Section({ node, cs, noteSet, depth }: {
             </div>
           )}
           {node.maddeler.length > 0 && (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-100">
               {node.maddeler.map(m => (
-                <MaddeRow key={m.id} m={m} cs={cs} hasNote={noteSet.has(String(m.id))} />
+                <MaddeCard key={m.id} m={m} cs={cs} hasNote={noteSet.has(String(m.id))} />
               ))}
             </div>
           )}
