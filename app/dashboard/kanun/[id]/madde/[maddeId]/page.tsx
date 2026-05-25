@@ -50,7 +50,7 @@ export default async function MaddePage({
 
         {pathParts.length > 0 && (
           <div className="flex flex-wrap items-center gap-1 mt-2">
-            {pathParts.map((part, i) => (
+            {pathParts.map((part: string, i: number) => (
               <span key={i} className="flex items-center gap-1">
                 {i > 0 && <span className="text-gray-300 text-xs">›</span>}
                 <span className="text-xs text-gray-500">{part}</span>
