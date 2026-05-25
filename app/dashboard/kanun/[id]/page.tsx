@@ -22,20 +22,20 @@ export default async function KanunPage({ params }: { params: Promise<{ id: stri
     .order('madde_no')
 
   return (
-    <div className="p-5 lg:p-8">
-      <div className="mb-6">
+    <div className="p-6 lg:p-10">
+      <div className="mb-7">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mb-5"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Dashboard
+          Genel Bakış
         </Link>
-        <p className="text-xs text-gray-400 mb-1">Kanun No: {kanun.no}</p>
-        <h2 className="text-xl font-bold text-gray-900">{kanun.baslik}</h2>
-        <p className="text-sm text-gray-500 mt-1">{maddeler?.length} madde</p>
+        <p className="text-xs text-gray-400 mb-1.5">Kanun No: {kanun.no}</p>
+        <h1 className="text-xl font-bold text-gray-900">{kanun.baslik}</h1>
+        <p className="text-sm text-gray-400 mt-1.5">{maddeler?.length} madde</p>
       </div>
 
       <KanunAccordion maddeler={maddeler || []} kanunId={id} />

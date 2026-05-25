@@ -28,39 +28,45 @@ export default async function DashboardPage() {
   const toplamMadde = kanunStats.reduce((a, k) => a + k.maddeSayisi, 0)
 
   return (
-    <div className="p-5 lg:p-8">
-      <div className="mb-7">
-        <h2 className="text-xl font-bold text-gray-900">Merhaba</h2>
+    <div className="p-6 lg:p-10 max-w-5xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Genel Bakış</h1>
         <p className="text-sm text-gray-500 mt-1">Tüm kanunlara buradan ulaşabilirsiniz.</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-7">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-5">
-          <p className="text-xs text-gray-500 mb-1">Kanun</p>
-          <p className="text-2xl lg:text-3xl font-bold text-gray-900">{kanunlar?.length || 0}</p>
+      <div className="grid grid-cols-3 gap-4 mb-10">
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Kanun</p>
+          <p className="text-3xl font-bold text-gray-900">{kanunlar?.length || 0}</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-5">
-          <p className="text-xs text-gray-500 mb-1">Madde</p>
-          <p className="text-2xl lg:text-3xl font-bold text-gray-900">{toplamMadde}</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Madde</p>
+          <p className="text-3xl font-bold text-gray-900">{toplamMadde}</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-5">
-          <p className="text-xs text-gray-500 mb-1">Notum</p>
-          <p className="text-2xl lg:text-3xl font-bold text-blue-600">{notSayisi || 0}</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Notum</p>
+          <p className="text-3xl font-bold text-blue-600">{notSayisi || 0}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Kanunlar</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
         {kanunStats.map(k => (
           <Link
             key={k.kanun_id}
             href={`/dashboard/kanun/${k.kanun_id}`}
-            className="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all group"
+            className="group flex flex-col bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all"
           >
-            <p className="text-xs text-gray-400 mb-1.5">Kanun No: {k.no}</p>
-            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug text-sm lg:text-base">
+            <p className="text-xs text-gray-400 mb-2">No: {k.no}</p>
+            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug text-sm flex-1">
               {k.baslik}
             </h3>
-            <p className="text-xs text-gray-400 mt-3">{k.maddeSayisi} madde</p>
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-400">{k.maddeSayisi} madde</p>
+              <svg className="w-4 h-4 text-gray-300 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
           </Link>
         ))}
       </div>

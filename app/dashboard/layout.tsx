@@ -16,7 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
       <Sidebar kanunlar={kanunlar || []} email={user.email || ''} />
-      <main className="flex-1 min-h-screen pt-14 lg:pt-0 overflow-y-auto">
+      <main className="flex-1 min-h-screen pt-14 lg:pt-0 overflow-y-auto bg-gray-50">
         {children}
       </main>
     </div>
