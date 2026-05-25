@@ -41,10 +41,39 @@ async function main() {
 
     const { error: kanunError } = await supabase
       .from('kanunlar')
-      .upsert({ kanun_id: kanun.id, baslik: kanun.baslik, no: kanun.no })
+      .upsert({ kanun_id: kanun.id, baslik: kanun.baslik, no: kanun.no }, { onConflict: 'kanun_id' })
 
     if (kanunError) {
       console.error('Kanun hatası:', kanunError)
+      continue
+    }
+
+    // Bu kanuna ait madde id'lerini al
+    const { data: mevcutMaddeler } = await supabase
+      .from('maddeler')
+      .select('id')
+      .eq('kanun_id', kanun.id)
+
+    if (mevcutMaddeler && mevcutMaddeler.length > 0) {
+      const maddeIds = mevcutMaddeler.map(m => m.id)
+      // Önce bağlı notları 100'er batch halinde sil
+      for (let b = 0; b < maddeIds.length; b += 100) {
+        const batchIds = maddeIds.slice(b, b + 100)
+        const { error: notDelError } = await supabase
+          .from('notlar')
+          .delete()
+          .in('madde_id', batchIds)
+        if (notDelError) console.error('Not silme hatası:', notDelError)
+      }
+    }
+
+    // Mevcut maddeler sil
+    const { error: delError } = await supabase
+      .from('maddeler')
+      .delete()
+      .eq('kanun_id', kanun.id)
+    if (delError) {
+      console.error('Silme hatası:', delError)
       continue
     }
 
