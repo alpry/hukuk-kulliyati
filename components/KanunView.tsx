@@ -46,6 +46,7 @@ function getSnippet(metin: string, query: string): string {
   return (start > 0 ? '…' : '') + metin.slice(start, end) + (end < metin.length ? '…' : '')
 }
 
+
 function SearchCard({ m, cs, query, showFull, kanunId, onBreadcrumbClick }: {
   m: SearchMadde
   cs: ColorScheme
@@ -135,7 +136,7 @@ function SearchCard({ m, cs, query, showFull, kanunId, onBreadcrumbClick }: {
                   onClick={e => {
                     e.preventDefault()
                     onBreadcrumbClick?.()
-                    router.push(`/dashboard/kanun/${kanunId}?section=${encodeURIComponent(pathParts[0])}`)
+                    router.push(`/dashboard/kanun/${kanunId}?section=${encodeURIComponent(part)}`)
                   }}
                   className="text-[10px] text-slate-500 hover:text-slate-700 hover:underline transition-colors"
                 >

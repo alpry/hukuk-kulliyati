@@ -43,6 +43,14 @@ function countAll(node: TreeNode): number {
     Array.from(node.children.values()).reduce((s, c) => s + countAll(c), 0)
 }
 
+function nodeContains(node: TreeNode, target: string): boolean {
+  if (node.title === target) return true
+  for (const child of node.children.values()) {
+    if (nodeContains(child, target)) return true
+  }
+  return false
+}
+
 function sortNodes(nodes: TreeNode[]): TreeNode[] {
   return [...nodes].sort((a, b) => {
     const score = (t: string) =>
@@ -197,20 +205,28 @@ function Section({ node, cs, noteSet, depth, expandedSection }: {
   depth: number
   expandedSection?: string | null
 }) {
-  const [open, setOpen] = useState(depth === 0 && expandedSection === node.title)
-  
+  const [open, setOpen] = useState(false)
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const target = expandedSection || undefined
+  const shouldOpen = target ? nodeContains(node, target) : false
+  const isTarget = target === node.title
+
   useEffect(() => {
-    if (depth === 0 && expandedSection === node.title) {
-      setOpen(true)
+    if (shouldOpen) setOpen(true)
+  }, [shouldOpen])
+
+  useEffect(() => {
+    if (isTarget && open) {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-  }, [expandedSection, depth, node.title])
+  }, [isTarget, open])
 
   const total = countAll(node)
   const sortedChildren = sortNodes(Array.from(node.children.values()))
 
   if (depth === 0) {
     return (
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden" style={{ borderLeftWidth: '3px', borderLeftColor: cs.primary }}>
+      <div ref={sectionRef} className="bg-white rounded-lg border border-slate-200 overflow-hidden" style={{ borderLeftWidth: '3px', borderLeftColor: cs.primary }}>
         <button
           onClick={() => setOpen(o => !o)}
           className="w-full flex items-center justify-between text-left px-4 py-3 hover:bg-slate-50 transition-colors"
@@ -246,7 +262,7 @@ function Section({ node, cs, noteSet, depth, expandedSection }: {
   }
 
   return (
-    <div
+    <div ref={sectionRef}
       className="bg-white rounded-lg border border-slate-200 overflow-hidden"
       style={{ marginLeft: `${(depth - 1) * 8}px` }}
     >
