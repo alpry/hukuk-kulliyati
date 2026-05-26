@@ -46,12 +46,13 @@ function getSnippet(metin: string, query: string): string {
   return (start > 0 ? '…' : '') + metin.slice(start, end) + (end < metin.length ? '…' : '')
 }
 
-function SearchCard({ m, cs, query, showFull, kanunId }: {
+function SearchCard({ m, cs, query, showFull, kanunId, onBreadcrumbClick }: {
   m: SearchMadde
   cs: ColorScheme
   query: string
   showFull: boolean
   kanunId: string
+  onBreadcrumbClick?: () => void
 }) {
   const [note, setNote] = useState<Note | null>(null)
   const [noteText, setNoteText] = useState('')
@@ -133,7 +134,8 @@ function SearchCard({ m, cs, query, showFull, kanunId }: {
                 <button
                   onClick={e => {
                     e.preventDefault()
-                    router.push(`/dashboard/kanun/${kanunId}?section=${encodeURIComponent(part)}`)
+                    onBreadcrumbClick?.()
+                    router.push(`/dashboard/kanun/${kanunId}?section=${encodeURIComponent(pathParts[0])}`)
                   }}
                   className="text-[10px] text-slate-500 hover:text-slate-700 hover:underline transition-colors"
                 >
@@ -301,6 +303,7 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
                   query={query.trim()}
                   showFull={isMaddeSearch}
                   kanunId={kanunId}
+                  onBreadcrumbClick={() => setQuery('')}
                 />
               ))}
             </>
