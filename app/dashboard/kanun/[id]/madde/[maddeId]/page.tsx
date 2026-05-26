@@ -80,7 +80,7 @@ export default async function MaddePage({
         )}
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 p-5 lg:p-6 mb-4"
+      <div className="bg-white rounded-lg border border-slate-200 p-5 lg:p-6 mb-4">
         <div className="flex items-center gap-2.5 mb-4 pb-4 border-b border-slate-100">
           <span
             className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
