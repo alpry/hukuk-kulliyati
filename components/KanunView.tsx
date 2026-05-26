@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import KanunAccordion from './KanunAccordion'
 import type { ColorScheme } from '@/lib/kanun-colors'
@@ -105,68 +106,74 @@ function SearchCard({ m, cs, query, showFull }: {
   const pathParts = m.path ? m.path.split(' > ').slice(1) : []
 
   return (
-    <div
-      className="bg-white rounded-lg border border-slate-200 overflow-hidden"
-      style={{ borderLeftWidth: note ? '2px' : '0.5px', borderLeftColor: note ? cs.primary : 'transparent' }}
-    >
-      <div className="px-5 pt-4 pb-3">
-        <div className="flex items-center gap-2.5 mb-2">
-          <span
-            className="text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0 tabular-nums card-pill"
-            style={{ backgroundColor: cs.light, color: cs.primary }}
-          >
-            Madde {m.madde_no}
-          </span>
-          {m.baslik && (
-            <span className="text-sm font-medium text-slate-700">{m.baslik}</span>
+    <Link href={`/dashboard/kanun/${m.id.split('-')[0]}/madde/${m.id}`} className="group block">
+      <div
+        className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-slate-300 transition-all"
+        style={{ borderLeftWidth: note ? '2px' : '0.5px', borderLeftColor: note ? cs.primary : 'transparent' }}
+      >
+        <div className="px-4 pt-3 pb-2">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 tabular-nums card-pill"
+              style={{ backgroundColor: cs.light, color: cs.primary }}
+            >
+              Madde {m.madde_no}
+            </span>
+            {m.baslik && (
+              <span className="text-xs font-medium text-slate-700 group-hover:text-slate-900">{m.baslik}</span>
+            )}
+          </div>
+
+          {pathParts.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mb-2">
+              {pathParts.map((part, i) => (
+                <span key={i} className="flex items-center gap-1">
+                  {i > 0 && <span className="text-slate-300 text-[10px]">›</span>}
+                  <span className="text-[10px] text-slate-400">{part}</span>
+                </span>
+              ))}
+            </div>
           )}
+
+          <p className="text-xs text-slate-700 leading-5 whitespace-pre-line">
+            {showFull ? (
+              m.metin
+            ) : (
+              <Highlight text={displayText} query={query} />
+            )}
+          </p>
         </div>
 
-        {pathParts.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1 mb-3">
-            {pathParts.map((part, i) => (
-              <span key={i} className="flex items-center gap-1">
-                {i > 0 && <span className="text-slate-300 text-xs">›</span>}
-                <span className="text-[11px] text-slate-400">{part}</span>
-              </span>
-            ))}
-          </div>
-        )}
-
-        <p className="text-sm text-slate-700 leading-7 whitespace-pre-line">
-          {showFull ? (
-            m.metin
-          ) : (
-            <Highlight text={displayText} query={query} />
+        <div className="border-t border-slate-100 px-4 py-2 bg-slate-50 group-hover:bg-slate-100 transition-colors">
+          <textarea
+            onClick={e => e.preventDefault()}
+            ref={textareaRef}
+            value={noteText}
+            onChange={e => setNoteText(e.target.value)}
+            placeholder="Not ekle..."
+            rows={2}
+            className="w-full text-xs text-slate-700 border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 transition-shadow"
+            onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}20` }}
+            onBlur={e => { e.target.style.boxShadow = '' }}
+          />
+          {noteText.trim() && (
+            <div className="flex justify-end mt-1.5">
+              <button
+                onClick={e => {
+                  e.preventDefault()
+                  handleSave()
+                }}
+                disabled={saving}
+                className="text-white text-[10px] font-semibold px-3 py-1 rounded-lg disabled:opacity-40"
+                style={{ backgroundColor: cs.primary }}
+              >
+                {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
+              </button>
+            </div>
           )}
-        </p>
+        </div>
       </div>
-
-      <div className="border-t border-slate-100 px-5 py-3">
-        <textarea
-          ref={textareaRef}
-          value={noteText}
-          onChange={e => setNoteText(e.target.value)}
-          placeholder="Not ekle..."
-          rows={2}
-          className="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 transition-shadow"
-          onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}20` }}
-          onBlur={e => { e.target.style.boxShadow = '' }}
-        />
-        {noteText.trim() && (
-          <div className="flex justify-end mt-2">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="text-white text-xs font-semibold px-4 py-1.5 rounded-lg disabled:opacity-40"
-              style={{ backgroundColor: cs.primary }}
-            >
-              {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+    </Link>
   )
 }
 
@@ -187,21 +194,24 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
     if (!trimmed || trimmed.length < 2) { setResults(null); return }
     setLoading(true)
 
-    const maddeMatch = trimmed.match(/^madde\s+(\d+)$/i)
+    const maddeMatch = trimmed.match(/^(?:madde\s+)?(\d+)$/i)
     let req
     if (maddeMatch) {
+      // Madde numarasına göre ara
+      const maddeNo = parseInt(maddeMatch[1])
       req = supabase
         .from('maddeler')
         .select('id, madde_no, baslik, metin, path')
         .eq('kanun_id', kanunId)
-        .eq('madde_no', parseInt(maddeMatch[1]))
+        .eq('madde_no', maddeNo)
         .limit(1)
     } else {
+      // Metin, başlık ve path'te ara
       req = supabase
         .from('maddeler')
         .select('id, madde_no, baslik, metin, path')
         .eq('kanun_id', kanunId)
-        .ilike('metin', `%${trimmed}%`)
+        .or(`metin.ilike.%${trimmed}%,baslik.ilike.%${trimmed}%,path.ilike.%${trimmed}%`)
         .order('madde_no')
         .limit(30)
     }
@@ -232,8 +242,8 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder='Madde ara… ("Madde 5" veya bir kelime)'
-          className="w-full pl-10 pr-10 py-3 bg-white rounded-lg text-sm text-slate-800 border border-slate-200 focus:outline-none placeholder:text-slate-400 transition-shadow"
+          placeholder='Ara… (Madde numarası: 5, kelime: zamanaşımı)'
+          className="w-full pl-10 pr-10 py-2.5 bg-white rounded-lg text-xs text-slate-800 border border-slate-200 focus:outline-none placeholder:text-slate-400 transition-shadow"
           onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}20` }}
           onBlur={e => { e.target.style.boxShadow = '' }}
         />
