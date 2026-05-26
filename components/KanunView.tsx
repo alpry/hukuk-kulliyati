@@ -45,11 +45,12 @@ function getSnippet(metin: string, query: string): string {
   return (start > 0 ? '…' : '') + metin.slice(start, end) + (end < metin.length ? '…' : '')
 }
 
-function SearchCard({ m, cs, query, showFull }: {
+function SearchCard({ m, cs, query, showFull, kanunId }: {
   m: SearchMadde
   cs: ColorScheme
   query: string
   showFull: boolean
+  kanunId: string
 }) {
   const [note, setNote] = useState<Note | null>(null)
   const [noteText, setNoteText] = useState('')
@@ -106,7 +107,7 @@ function SearchCard({ m, cs, query, showFull }: {
   const pathParts = m.path ? m.path.split(' > ').slice(1) : []
 
   return (
-    <Link href={`/dashboard/kanun/${m.id.split('-')[0]}/madde/${m.id}`} className="group block">
+    <Link href={`/dashboard/kanun/${kanunId}/madde/${m.id}`} className="group block">
       <div
         className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-slate-300 transition-all"
         style={{ borderLeftWidth: note ? '2px' : '0.5px', borderLeftColor: note ? cs.primary : 'transparent' }}
@@ -207,16 +208,20 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
         .limit(1)
     } else {
       // Metin, başlık ve path'te ara
+      const searchPattern = `%${trimmed}%`
       req = supabase
         .from('maddeler')
         .select('id, madde_no, baslik, metin, path')
         .eq('kanun_id', kanunId)
-        .or(`metin.ilike.%${trimmed}%,baslik.ilike.%${trimmed}%,path.ilike.%${trimmed}%`)
+        .or(`metin.ilike.${searchPattern},baslik.ilike.${searchPattern},path.ilike.${searchPattern}`)
         .order('madde_no')
         .limit(30)
     }
 
-    const { data } = await req
+    const { data, error } = await req
+    if (error) {
+      console.error('Search error:', error)
+    }
     setResults(data || [])
     setLoading(false)
   }, [kanunId])
@@ -279,6 +284,7 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
                   cs={cs}
                   query={query.trim()}
                   showFull={isMaddeSearch}
+                  kanunId={kanunId}
                 />
               ))}
             </>
