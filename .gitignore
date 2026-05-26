@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# one-off inspection scripts (geliştirme zamanı)
+scripts/inspect-madde.mjs
+scripts/verify-titles.mjs

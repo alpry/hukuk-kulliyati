@@ -1,18 +1,31 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
 import "./globals.css";
-
-const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Hukuk Külliyatı",
   description: "Türk hukuku mevzuatı ve kişisel notlar",
 };
 
+// İlk render'da koyu tema/font için class'ları erkenden ekle (FOUC engel)
+const themeBootstrap = `
+(function(){
+  try {
+    var m = document.cookie.match(/(?:^|; )hk_theme=(light|dark)/);
+    var f = document.cookie.match(/(?:^|; )hk_font=(sm|md|lg)/);
+    var html = document.documentElement;
+    if (m && m[1] === 'dark') html.classList.add('dark');
+    html.classList.add('font-' + (f ? f[1] : 'md'));
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={geist.className}>
-      <body className="min-h-screen bg-slate-100 text-slate-900">{children}</body>
+    <html lang="tr" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
+      <body className="min-h-screen" suppressHydrationWarning>{children}</body>
     </html>
   );
 }

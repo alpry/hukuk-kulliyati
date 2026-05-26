@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { ChevronLeft, BookOpen } from 'lucide-react'
 import KanunView from '@/components/KanunView'
+import PageHeader from '@/components/PageHeader'
 import { getColorScheme } from '@/lib/kanun-colors'
 
 export default async function KanunPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,20 +40,23 @@ export default async function KanunPage({ params }: { params: Promise<{ id: stri
   const cs = getColorScheme(kanun.baslik)
 
   return (
-    <div>
-      <div className="mb-8">
+    <div className="page-fade">
+      <PageHeader />
+
+      <div className="mb-6">
         <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-700 transition-colors mb-5"
+          href="/dashboard/kanunlar"
+          className="inline-flex items-center gap-1 text-[11px] text-subtle hover:text-muted transition-colors mb-3"
         >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Genel Bakış
+          <ChevronLeft className="w-3 h-3" />
+          Kanunlar
         </Link>
-        <p className="text-xs text-slate-400 mb-1.5 font-medium">Kanun No: {kanun.no}</p>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{kanun.baslik}</h1>
-        <p className="text-sm text-slate-500 mt-2">{maddeler?.length} madde</p>
+        <div className="flex items-center gap-2 mb-1">
+          <BookOpen className="w-4 h-4 text-[var(--primary)]" strokeWidth={1.75} />
+          <p className="text-[11px] text-subtle font-medium">Kanun No: {kanun.no}</p>
+        </div>
+        <h1 className="text-[20px] font-semibold tracking-tight">{kanun.baslik}</h1>
+        <p className="text-[12px] text-subtle mt-1">{maddeler?.length} madde</p>
       </div>
 
       <KanunView
