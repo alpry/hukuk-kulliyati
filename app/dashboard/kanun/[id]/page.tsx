@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import KanunAccordion from '@/components/KanunAccordion'
+import KanunView from '@/components/KanunView'
 import { getColorScheme } from '@/lib/kanun-colors'
 
 export default async function KanunPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,7 +38,7 @@ export default async function KanunPage({ params }: { params: Promise<{ id: stri
   const cs = getColorScheme(kanun.baslik)
 
   return (
-    <div className="p-6 lg:p-10">
+    <div>
       <div className="mb-8">
         <Link
           href="/dashboard"
@@ -50,11 +50,11 @@ export default async function KanunPage({ params }: { params: Promise<{ id: stri
           Genel Bakış
         </Link>
         <p className="text-xs text-slate-400 mb-1.5 font-medium">Kanun No: {kanun.no}</p>
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">{kanun.baslik}</h1>
-        <p className="text-sm text-slate-400 mt-1.5">{maddeler?.length} madde</p>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{kanun.baslik}</h1>
+        <p className="text-sm text-slate-500 mt-2">{maddeler?.length} madde</p>
       </div>
 
-      <KanunAccordion
+      <KanunView
         maddeler={maddeler || []}
         kanunId={id}
         noteIds={noteIds}

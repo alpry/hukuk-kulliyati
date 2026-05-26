@@ -40,8 +40,8 @@ export default async function DashboardPage() {
           { label: 'Madde', value: toplamMadde, color: false },
           { label: 'Notum', value: notSayisi || 0, color: true },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6">
-            <p className={`text-[11px] font-semibold uppercase tracking-widest mb-3 ${color ? 'text-blue-400' : 'text-slate-400'}`}>
+          <div key={label} className="rounded-lg bg-white border border-slate-200 p-6">
+            <p className={`text-[11px] font-semibold uppercase tracking-widest mb-3 ${color ? 'text-blue-600' : 'text-slate-400'}`}>
               {label}
             </p>
             <p className={`text-4xl font-bold tracking-tight ${color ? 'text-blue-600' : 'text-slate-900'}`}>
@@ -57,7 +57,7 @@ export default async function DashboardPage() {
           <Link
             key={k.kanun_id}
             href={`/dashboard/kanun/${k.kanun_id}`}
-            className="group flex flex-col bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-5 hover:shadow-md hover:ring-black/10 transition-all duration-200"
+            className="group flex flex-col bg-white rounded-lg border border-slate-200 p-5 hover:border-slate-300 transition-all duration-200"
           >
             <p className="text-[11px] font-medium text-slate-400 mb-2">No: {k.no}</p>
             <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug text-sm flex-1">

@@ -132,12 +132,12 @@ function MaddeCard({ m, cs, hasNote }: { m: Madde; cs: ColorScheme; hasNote: boo
 
   return (
     <div
-      className="border-l-2 px-5 py-4"
-      style={{ borderLeftColor: hasNote ? cs.primary : 'transparent' }}
+      className="bg-white rounded-lg border border-slate-200 px-5 py-4"
+      style={{ borderLeftWidth: hasNote ? '2px' : '0.5px', borderLeftColor: hasNote ? cs.primary : 'transparent' }}
     >
       <div className="flex items-center gap-2.5 mb-3">
         <span
-          className="text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0 tabular-nums"
+          className="text-xs font-bold px-2.5 py-0.5 rounded-full shrink-0 tabular-nums card-pill"
           style={{ backgroundColor: cs.light, color: cs.primary }}
         >
           Madde {m.madde_no}
@@ -150,13 +150,13 @@ function MaddeCard({ m, cs, hasNote }: { m: Madde; cs: ColorScheme; hasNote: boo
       {metin === null ? (
         <div className="py-3 flex justify-center">
           <div
-            className="w-4 h-4 rounded-full border-2 border-slate-100 animate-spin"
+            className="w-4 h-4 rounded-full border-2 border-slate-200 animate-spin"
             style={{ borderTopColor: cs.primary }}
           />
         </div>
       ) : (
         <>
-          <p className="text-sm text-slate-700 leading-8 whitespace-pre-line mb-5">
+          <p className="text-sm text-slate-700 leading-7 whitespace-pre-line mb-4">
             {metin}
           </p>
 
@@ -168,7 +168,7 @@ function MaddeCard({ m, cs, hasNote }: { m: Madde; cs: ColorScheme; hasNote: boo
               placeholder="Not ekle..."
               rows={2}
               className="w-full text-sm text-slate-700 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 transition-shadow"
-              onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}28` }}
+              onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}20` }}
               onBlur={e => { e.target.style.boxShadow = '' }}
             />
             {noteText.trim() && (
@@ -202,15 +202,15 @@ function Section({ node, cs, noteSet, depth }: {
 
   if (depth === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm ring-1 ring-black/5 overflow-hidden">
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden" style={{ borderLeftWidth: '3px', borderLeftColor: cs.primary }}>
         <button
           onClick={() => setOpen(o => !o)}
-          className="w-full flex items-center justify-between text-left px-5 py-4 hover:bg-slate-50/70 transition-colors"
+          className="w-full flex items-center justify-between text-left px-5 py-4 hover:bg-slate-50 transition-colors"
         >
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <span className="font-semibold text-slate-900 text-sm leading-snug">{node.title}</span>
+            <span className="font-bold text-slate-900 text-sm leading-snug">{node.title}</span>
             <span
-              className="text-xs font-semibold px-2.5 py-0.5 rounded-full shrink-0"
+              className="text-xs font-semibold px-2.5 py-0.5 rounded-full shrink-0 card-pill"
               style={{ backgroundColor: cs.light, color: cs.primary }}
             >
               {total} madde
@@ -220,12 +220,12 @@ function Section({ node, cs, noteSet, depth }: {
         </button>
 
         {open && (
-          <div className="border-t border-slate-100 bg-slate-50/70 p-3 space-y-2">
+          <div className="border-t border-slate-100 p-3 space-y-2" style={{ backgroundColor: '#f2f2f7' }}>
             {sortedChildren.map(child => (
               <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={1} />
             ))}
             {node.maddeler.length > 0 && (
-              <div className="bg-white rounded-xl ring-1 ring-black/5 overflow-hidden divide-y divide-slate-100">
+              <div className="space-y-2">
                 {node.maddeler.map(m => (
                   <MaddeCard key={m.id} m={m} cs={cs} hasNote={noteSet.has(String(m.id))} />
                 ))}
@@ -239,22 +239,22 @@ function Section({ node, cs, noteSet, depth }: {
 
   return (
     <div
-      className="bg-white rounded-xl ring-1 ring-black/5 overflow-hidden"
-      style={{ marginLeft: `${(depth - 1) * 12}px` }}
+      className="bg-white rounded-lg border border-slate-200 overflow-hidden"
+      style={{ marginLeft: `${(depth - 1) * 16}px` }}
     >
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between text-left px-4 py-3 hover:bg-slate-50 transition-colors"
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <span className={`text-sm leading-snug ${depth === 1 ? 'font-medium text-slate-800' : 'text-slate-700'}`}>
+          <span className={`text-sm leading-snug ${depth === 1 ? 'font-semibold text-slate-800' : 'font-medium text-slate-700'}`}>
             {node.title}
           </span>
           <span
-            className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0"
+            className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 card-pill"
             style={{ backgroundColor: cs.light, color: cs.primary }}
           >
-            {total} madde
+            {total}
           </span>
         </div>
         <Chevron open={open} cs={cs} />
@@ -263,14 +263,14 @@ function Section({ node, cs, noteSet, depth }: {
       {open && (
         <div className="border-t border-slate-100">
           {sortedChildren.length > 0 && (
-            <div className="p-2 space-y-1.5 bg-slate-50/50">
+            <div className="p-2 space-y-2" style={{ backgroundColor: '#f2f2f7' }}>
               {sortedChildren.map(child => (
                 <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={depth + 1} />
               ))}
             </div>
           )}
           {node.maddeler.length > 0 && (
-            <div className="divide-y divide-slate-100">
+            <div className="space-y-2 p-3">
               {node.maddeler.map(m => (
                 <MaddeCard key={m.id} m={m} cs={cs} hasNote={noteSet.has(String(m.id))} />
               ))}
