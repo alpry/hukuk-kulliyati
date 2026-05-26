@@ -37,12 +37,6 @@ export default async function MaddePage({
   const pathParts = madde.path ? madde.path.split(' > ').slice(1) : []
   const cs = getColorScheme(kanun?.baslik || '')
 
-  // Build breadcrumb paths
-  const buildBreadcrumbPath = (upToIndex: number) => {
-    const parts = madde.path ? madde.path.split(' > ').slice(1, upToIndex + 2) : []
-    return parts.join(' > ')
-  }
-
   return (
     <div className="p-4 lg:p-8 max-w-3xl">
       <div className="mb-6">
@@ -65,7 +59,7 @@ export default async function MaddePage({
                   {i > 0 && <span className="text-slate-300 text-[10px]">›</span>}
                   {!isLast ? (
                     <Link
-                      href={`/dashboard/kanun/${id}?section=${encodeURIComponent(buildBreadcrumbPath(i))}`}
+                      href={`/dashboard/kanun/${id}?section=${encodeURIComponent(part)}`}
                       className="text-[10px] text-slate-500 hover:text-slate-700 hover:underline transition-colors"
                     >
                       {part}

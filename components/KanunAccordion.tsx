@@ -190,13 +190,21 @@ function MaddeCard({ m, cs, hasNote, isEven }: { m: Madde; cs: ColorScheme; hasN
   )
 }
 
-function Section({ node, cs, noteSet, depth }: {
+function Section({ node, cs, noteSet, depth, expandedSection }: {
   node: TreeNode
   cs: ColorScheme
   noteSet: Set<string>
   depth: number
+  expandedSection?: string | null
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(depth === 0 && expandedSection === node.title)
+  
+  useEffect(() => {
+    if (depth === 0 && expandedSection === node.title) {
+      setOpen(true)
+    }
+  }, [expandedSection, depth, node.title])
+
   const total = countAll(node)
   const sortedChildren = sortNodes(Array.from(node.children.values()))
 
@@ -222,7 +230,7 @@ function Section({ node, cs, noteSet, depth }: {
         {open && (
           <div className="border-t border-slate-100 p-2 space-y-2" style={{ backgroundColor: '#f2f2f7' }}>
             {sortedChildren.map(child => (
-              <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={1} />
+              <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={1} expandedSection={expandedSection} />
             ))}
             {node.maddeler.length > 0 && (
               <div className="space-y-2">
@@ -265,7 +273,7 @@ function Section({ node, cs, noteSet, depth }: {
           {sortedChildren.length > 0 && (
             <div className="p-1.5 space-y-2" style={{ backgroundColor: '#f2f2f7' }}>
               {sortedChildren.map(child => (
-                <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={depth + 1} />
+                <Section key={child.title} node={child} cs={cs} noteSet={noteSet} depth={depth + 1} expandedSection={expandedSection} />
               ))}
             </div>
           )}
@@ -282,11 +290,12 @@ function Section({ node, cs, noteSet, depth }: {
   )
 }
 
-export default function KanunAccordion({ maddeler, noteIds, colorScheme }: {
+export default function KanunAccordion({ maddeler, noteIds, colorScheme, expandedSection }: {
   maddeler: Madde[]
   kanunId: string
   noteIds: string[]
   colorScheme: ColorScheme
+  expandedSection?: string | null
 }) {
   const root = buildTree(maddeler)
   const sections = sortNodes(Array.from(root.children.values()))
@@ -295,7 +304,7 @@ export default function KanunAccordion({ maddeler, noteIds, colorScheme }: {
   return (
     <div className="space-y-2">
       {sections.map(s => (
-        <Section key={s.title} node={s} cs={colorScheme} noteSet={noteSet} depth={0} />
+        <Section key={s.title} node={s} cs={colorScheme} noteSet={noteSet} depth={0} expandedSection={expandedSection} />
       ))}
     </div>
   )

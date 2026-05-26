@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import KanunAccordion from './KanunAccordion'
 import type { ColorScheme } from '@/lib/kanun-colors'
@@ -59,6 +60,8 @@ function SearchCard({ m, cs, query, showFull, kanunId }: {
   const [userId, setUserId] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const supabase = createClient()
+  const router = useRouter()
+  const pathParts = m.path ? m.path.split(' > ').slice(1) : []
 
   useEffect(() => {
     let cancelled = false
@@ -104,16 +107,12 @@ function SearchCard({ m, cs, query, showFull, kanunId }: {
   }
 
   const displayText = showFull ? m.metin : getSnippet(m.metin, query)
-  const pathParts = m.path ? m.path.split(' > ').slice(1) : []
 
   return (
-    <Link href={`/dashboard/kanun/${kanunId}/madde/${m.id}`} className="group block">
-      <div
-        className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-slate-300 transition-all"
-        style={{ borderLeftWidth: note ? '2px' : '0.5px', borderLeftColor: note ? cs.primary : 'transparent' }}
-      >
-        <div className="px-4 pt-3 pb-2">
-          <div className="flex items-center gap-2 mb-1.5">
+    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div className="px-4 pt-3 pb-2">
+        <Link href={`/dashboard/kanun/${kanunId}/madde/${m.id}`} className="group">
+          <div className="flex items-center gap-2 mb-1.5 hover:opacity-75 transition-opacity">
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 tabular-nums card-pill"
               style={{ backgroundColor: cs.light, color: cs.primary }}
@@ -124,57 +123,65 @@ function SearchCard({ m, cs, query, showFull, kanunId }: {
               <span className="text-xs font-medium text-slate-700 group-hover:text-slate-900">{m.baslik}</span>
             )}
           </div>
+        </Link>
 
-          {pathParts.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1 mb-2">
-              {pathParts.map((part, i) => (
-                <span key={i} className="flex items-center gap-1">
-                  {i > 0 && <span className="text-slate-300 text-[10px]">›</span>}
-                  <span className="text-[10px] text-slate-400">{part}</span>
-                </span>
-              ))}
-            </div>
+        {pathParts.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1 mb-2">
+            {pathParts.map((part, i) => (
+              <span key={i} className="flex items-center gap-1">
+                {i > 0 && <span className="text-slate-300 text-[10px]">›</span>}
+                <button
+                  onClick={e => {
+                    e.preventDefault()
+                    router.push(`/dashboard/kanun/${kanunId}?section=${encodeURIComponent(part)}`)
+                  }}
+                  className="text-[10px] text-slate-500 hover:text-slate-700 hover:underline transition-colors"
+                >
+                  {part}
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <p className="text-xs text-slate-700 leading-5 whitespace-pre-line">
+          {showFull ? (
+            m.metin
+          ) : (
+            <Highlight text={displayText} query={query} />
           )}
-
-          <p className="text-xs text-slate-700 leading-5 whitespace-pre-line">
-            {showFull ? (
-              m.metin
-            ) : (
-              <Highlight text={displayText} query={query} />
-            )}
-          </p>
-        </div>
-
-        <div className="border-t border-slate-100 px-4 py-2 bg-slate-50 group-hover:bg-slate-100 transition-colors">
-          <textarea
-            onClick={e => e.preventDefault()}
-            ref={textareaRef}
-            value={noteText}
-            onChange={e => setNoteText(e.target.value)}
-            placeholder="Not ekle..."
-            rows={2}
-            className="w-full text-xs text-slate-700 border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 transition-shadow"
-            onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}20` }}
-            onBlur={e => { e.target.style.boxShadow = '' }}
-          />
-          {noteText.trim() && (
-            <div className="flex justify-end mt-1.5">
-              <button
-                onClick={e => {
-                  e.preventDefault()
-                  handleSave()
-                }}
-                disabled={saving}
-                className="text-white text-[10px] font-semibold px-3 py-1 rounded-lg disabled:opacity-40"
-                style={{ backgroundColor: cs.primary }}
-              >
-                {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
-              </button>
-            </div>
-          )}
-        </div>
+        </p>
       </div>
-    </Link>
+
+      <div className="border-t border-slate-100 px-4 py-2 bg-slate-50">
+        <textarea
+          onClick={e => e.preventDefault()}
+          ref={textareaRef}
+          value={noteText}
+          onChange={e => setNoteText(e.target.value)}
+          placeholder="Not ekle..."
+          rows={2}
+          className="w-full text-xs text-slate-700 border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none resize-none overflow-hidden placeholder:text-slate-400 transition-shadow"
+          onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}20` }}
+          onBlur={e => { e.target.style.boxShadow = '' }}
+        />
+        {noteText.trim() && (
+          <div className="flex justify-end mt-1.5">
+            <button
+              onClick={e => {
+                e.preventDefault()
+                handleSave()
+              }}
+              disabled={saving}
+              className="text-white text-[10px] font-semibold px-3 py-1 rounded-lg disabled:opacity-40"
+              style={{ backgroundColor: cs.primary }}
+            >
+              {saving ? 'Kaydediliyor...' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -187,8 +194,17 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchMadde[] | null>(null)
   const [loading, setLoading] = useState(false)
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const cs = colorScheme
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  // URL parametrisinden section al
+  useEffect(() => {
+    const section = searchParams.get('section')
+    setExpandedSection(section)
+  }, [searchParams])
 
   const doSearch = useCallback(async (q: string) => {
     const trimmed = q.trim()
@@ -296,6 +312,7 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
           kanunId={kanunId}
           noteIds={noteIds}
           colorScheme={colorScheme}
+          expandedSection={expandedSection}
         />
       )}
     </div>
