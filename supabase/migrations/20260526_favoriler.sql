@@ -26,3 +26,5 @@ drop policy if exists "favoriler_delete_own" on public.favoriler;
 create policy "favoriler_delete_own"
   on public.favoriler for delete
   using (auth.uid() = user_id);
+
+grant select, insert, delete on public.favoriler to authenticated;

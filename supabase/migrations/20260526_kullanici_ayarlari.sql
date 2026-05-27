@@ -24,3 +24,5 @@ create policy "ayarlar_update_own"
   on public.kullanici_ayarlari for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+grant select, insert, update on public.kullanici_ayarlari to authenticated;
