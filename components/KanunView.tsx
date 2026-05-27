@@ -120,6 +120,7 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
                 {results.map(m => (
                   <MaddeInlineView
                     key={m.id}
+                    kanunId={kanunId}
                     maddeId={m.id}
                     maddeNo={m.madde_no}
                     baslik={m.baslik}

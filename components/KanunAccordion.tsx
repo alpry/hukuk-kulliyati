@@ -126,6 +126,7 @@ function Section({ node, cs, noteSet, kanunId, depth, expandedSection }: {
                 {node.maddeler.map(m => (
                   <MaddeInlineView
                     key={m.id}
+                    kanunId={kanunId}
                     maddeId={m.id}
                     maddeNo={m.madde_no}
                     baslik={m.baslik}
@@ -180,6 +181,7 @@ function Section({ node, cs, noteSet, kanunId, depth, expandedSection }: {
               {node.maddeler.map(m => (
                 <MaddeInlineView
                   key={m.id}
+                  kanunId={kanunId}
                   maddeId={m.id}
                   maddeNo={m.madde_no}
                   baslik={m.baslik}
@@ -225,6 +227,7 @@ export default function KanunAccordion({ maddeler, kanunId, noteIds, colorScheme
           {root.maddeler.map(m => (
             <MaddeInlineView
               key={m.id}
+              kanunId={kanunId}
               maddeId={m.id}
               maddeNo={m.madde_no}
               baslik={m.baslik}

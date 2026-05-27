@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { ChevronDown, StickyNote } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import FavoriteButton from './FavoriteButton'
@@ -90,7 +91,7 @@ function InlineNoteEditor({
         ref={textareaRef}
         value={icerik}
         onChange={e => setIcerik(e.target.value)}
-        placeholder="Not ekle..."
+        placeholder="Bu madde için notunuzu buraya yazın..."
         rows={1}
         className="w-full text-[12px] bg-[var(--surface-muted)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-3 py-2 resize-none overflow-hidden focus:outline-none transition-shadow"
         style={{ minHeight: '36px' }}
@@ -117,6 +118,7 @@ function InlineNoteEditor({
 }
 
 export default function MaddeInlineView({
+  kanunId,
   maddeId,
   maddeNo,
   baslik,
@@ -124,6 +126,7 @@ export default function MaddeInlineView({
   hasNote: initialHasNote,
   cs,
 }: {
+  kanunId: string
   maddeId: string
   maddeNo: number
   baslik?: string | null
@@ -172,16 +175,18 @@ export default function MaddeInlineView({
     >
       {/* Accordion header */}
       <div className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--surface-muted)] transition-colors">
+        <Link
+          href={`/dashboard/kanun/${kanunId}/madde/${maddeId}`}
+          onClick={e => e.stopPropagation()}
+          className="text-[10px] font-bold px-2 py-0.5 rounded-full card-pill shrink-0 tabular-nums leading-none hover:opacity-80 transition-opacity"
+          style={{ backgroundColor: cs.light, color: cs.primary }}
+        >
+          Madde {maddeNo}
+        </Link>
         <button
           onClick={handleToggle}
-          className="flex items-center gap-3 flex-1 min-w-0 text-left"
+          className="flex items-center flex-1 min-w-0 text-left"
         >
-          <span
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full card-pill shrink-0 tabular-nums leading-none"
-            style={{ backgroundColor: cs.light, color: cs.primary }}
-          >
-            Madde {maddeNo}
-          </span>
           {title ? (
             <span className="flex-1 min-w-0 text-[12.5px] text-muted truncate leading-snug">{title}</span>
           ) : (
