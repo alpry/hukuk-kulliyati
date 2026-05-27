@@ -1,8 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 import MaddeInlineView from './MaddeInlineView'
+import FavoriteButton from './FavoriteButton'
+import { createClient } from '@/lib/supabase/client'
 import { normalizeTitle } from '@/lib/text-case'
 import type { ColorScheme } from '@/lib/kanun-colors'
 
@@ -54,6 +57,165 @@ function sortNodes(nodes: TreeNode[]): TreeNode[] {
       t.toLowerCase().includes('genel') ? -1 : t.toLowerCase().includes('özel') ? 1 : 0
     return score(a.title) - score(b.title)
   })
+}
+
+function InlineMaddeNoteEditor({
+  maddeId,
+  existingNote,
+  cs,
+}: {
+  maddeId: string
+  existingNote: { id: string; icerik: string } | null
+  cs: ColorScheme
+}) {
+  const [icerik, setIcerik] = useState(existingNote?.icerik || '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const noteIdRef = useRef<string | null>(existingNote?.id || null)
+  const [hasSavedNote, setHasSavedNote] = useState(!!existingNote)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = el.scrollHeight + 'px'
+  }, [icerik])
+
+  async function handleSave() {
+    setSaving(true)
+    setSaved(false)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSaving(false); return }
+
+    let error
+    if (noteIdRef.current) {
+      const res = await supabase
+        .from('notlar')
+        .update({ icerik, updated_at: new Date().toISOString() })
+        .eq('id', noteIdRef.current)
+      error = res.error
+    } else {
+      const res = await supabase
+        .from('notlar')
+        .insert({ madde_id: parseInt(maddeId), icerik, user_id: user.id })
+        .select('id')
+        .single()
+      error = res.error
+      if (!error && res.data) {
+        noteIdRef.current = res.data.id
+        setHasSavedNote(true)
+      }
+    }
+
+    setSaving(false)
+    if (!error) {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
+  }
+
+  async function handleDelete() {
+    if (!noteIdRef.current) return
+    await supabase.from('notlar').delete().eq('id', noteIdRef.current)
+    setIcerik('')
+    noteIdRef.current = null
+    setHasSavedNote(false)
+  }
+
+  return (
+    <div className="space-y-2">
+      <textarea
+        ref={textareaRef}
+        value={icerik}
+        onChange={e => setIcerik(e.target.value)}
+        placeholder="Bu madde için notunuzu buraya yazın..."
+        rows={1}
+        className="w-full text-[12px] bg-[var(--surface-muted)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-3 py-2 resize-none overflow-hidden focus:outline-none transition-shadow"
+        style={{ minHeight: '36px' }}
+        onFocus={e => { e.target.style.boxShadow = `0 0 0 3px ${cs.primary}30` }}
+        onBlur={e => { e.target.style.boxShadow = '' }}
+      />
+      <div className="flex items-center justify-between">
+        {hasSavedNote && icerik ? (
+          <button onClick={handleDelete} className="text-[10px] text-subtle hover:text-red-500 transition-colors">
+            Notu Sil
+          </button>
+        ) : <span />}
+        <button
+          onClick={handleSave}
+          disabled={saving || !icerik.trim()}
+          className="text-[11px] font-medium px-3 py-1 rounded-lg text-white disabled:opacity-40 transition-all"
+          style={{ backgroundColor: cs.primary }}
+        >
+          {saving ? 'Kaydediliyor…' : saved ? 'Kaydedildi ✓' : 'Kaydet'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function InlineMaddeContent({ madde, kanunId, cs }: {
+  madde: Madde
+  kanunId: string
+  cs: ColorScheme
+}) {
+  const [detail, setDetail] = useState<{ metin: string; note: { id: string; icerik: string } | null; isFav: boolean } | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      const supabase = createClient()
+      const [maddeRes, { data: { user } }] = await Promise.all([
+        supabase.from('maddeler').select('metin').eq('id', madde.id).single(),
+        supabase.auth.getUser(),
+      ])
+      let note = null
+      let isFav = false
+      if (user) {
+        const [noteRes, favRes] = await Promise.all([
+          supabase.from('notlar').select('id, icerik').eq('user_id', user.id).eq('madde_id', Number(madde.id)).maybeSingle(),
+          supabase.from('favoriler').select('id').eq('user_id', user.id).eq('madde_id', Number(madde.id)).maybeSingle(),
+        ])
+        note = noteRes.data
+        isFav = !!favRes.data
+      }
+      if (!cancelled) {
+        setDetail({ metin: maddeRes.data?.metin || '', note, isFav })
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [madde.id])
+
+  if (loading) {
+    return <p className="text-[12px] text-subtle py-3 text-center">Yükleniyor…</p>
+  }
+  if (!detail) return null
+
+  return (
+    <div className="px-3 py-3 space-y-3 bg-[var(--background)]">
+      <div className="flex items-center justify-between">
+        <Link
+          href={`/dashboard/kanun/${kanunId}/madde/${madde.id}`}
+          className="text-[10px] font-bold px-2 py-0.5 rounded-full card-pill tabular-nums leading-none hover:opacity-80 transition-opacity"
+          style={{ backgroundColor: cs.light, color: cs.primary }}
+        >
+          Madde {madde.madde_no}
+        </Link>
+        <FavoriteButton maddeId={Number(madde.id)} initial={detail.isFav} />
+      </div>
+      <p className="text-[13px] leading-7 whitespace-pre-line">{detail.metin}</p>
+      <InlineMaddeNoteEditor
+        maddeId={madde.id}
+        existingNote={detail.note}
+        cs={cs}
+      />
+    </div>
+  )
 }
 
 function Chevron({ open, cs }: { open: boolean; cs: ColorScheme }) {
@@ -177,20 +339,24 @@ function Section({ node, cs, noteSet, kanunId, depth, expandedSection }: {
             </div>
           )}
           {node.maddeler.length > 0 && (
-            <div className="space-y-0.5 p-1.5">
-              {node.maddeler.map(m => (
-                <MaddeInlineView
-                  key={m.id}
-                  kanunId={kanunId}
-                  maddeId={m.id}
-                  maddeNo={m.madde_no}
-                  baslik={m.baslik}
-                  path={m.path}
-                  cs={cs}
-                  hasNote={noteSet.has(String(m.id))}
-                />
-              ))}
-            </div>
+            sortedChildren.length === 0 && node.maddeler.length === 1 ? (
+              <InlineMaddeContent madde={node.maddeler[0]} kanunId={kanunId} cs={cs} />
+            ) : (
+              <div className="space-y-0.5 p-1.5">
+                {node.maddeler.map(m => (
+                  <MaddeInlineView
+                    key={m.id}
+                    kanunId={kanunId}
+                    maddeId={m.id}
+                    maddeNo={m.madde_no}
+                    baslik={m.baslik}
+                    path={m.path}
+                    cs={cs}
+                    hasNote={noteSet.has(String(m.id))}
+                  />
+                ))}
+              </div>
+            )
           )}
         </div>
       )}
