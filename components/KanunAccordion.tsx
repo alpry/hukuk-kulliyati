@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import MaddeListItem from './MaddeListItem'
-import { deriveMaddeTitle } from '@/lib/madde-title'
+import MaddeInlineView from './MaddeInlineView'
 import { normalizeTitle } from '@/lib/text-case'
 import type { ColorScheme } from '@/lib/kanun-colors'
 
@@ -125,12 +124,12 @@ function Section({ node, cs, noteSet, kanunId, depth, expandedSection }: {
             {node.maddeler.length > 0 && (
               <div className="space-y-0.5 p-1">
                 {node.maddeler.map(m => (
-                  <MaddeListItem
+                  <MaddeInlineView
                     key={m.id}
-                    kanunId={kanunId}
                     maddeId={m.id}
                     maddeNo={m.madde_no}
-                    baslik={deriveMaddeTitle(m.baslik, m.path).title}
+                    baslik={m.baslik}
+                    path={m.path}
                     cs={cs}
                     hasNote={noteSet.has(String(m.id))}
                   />
@@ -179,12 +178,13 @@ function Section({ node, cs, noteSet, kanunId, depth, expandedSection }: {
           {node.maddeler.length > 0 && (
             <div className="space-y-0.5 p-1.5">
               {node.maddeler.map(m => (
-                <MaddeListItem
+                <MaddeInlineView
                   key={m.id}
                   kanunId={kanunId}
                   maddeId={m.id}
                   maddeNo={m.madde_no}
-                  baslik={deriveMaddeTitle(m.baslik, m.path).title}
+                  baslik={m.baslik}
+                  path={m.path}
                   cs={cs}
                   hasNote={noteSet.has(String(m.id))}
                 />
@@ -221,6 +221,21 @@ export default function KanunAccordion({ maddeler, kanunId, noteIds, colorScheme
           expandedSection={expandedSection}
         />
       ))}
+      {root.maddeler.length > 0 && (
+        <div className="surface overflow-hidden divide-y divide-[var(--border)]">
+          {root.maddeler.map(m => (
+            <MaddeInlineView
+              key={m.id}
+              maddeId={m.id}
+              maddeNo={m.madde_no}
+              baslik={m.baslik}
+              path={m.path}
+              cs={colorScheme}
+              hasNote={noteSet.has(String(m.id))}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

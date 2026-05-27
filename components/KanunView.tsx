@@ -5,8 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Search, X, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import KanunAccordion from './KanunAccordion'
-import MaddeListItem from './MaddeListItem'
-import { deriveMaddeTitle } from '@/lib/madde-title'
+import MaddeInlineView from './MaddeInlineView'
 import type { ColorScheme } from '@/lib/kanun-colors'
 
 type Madde = {
@@ -23,16 +22,6 @@ type SearchMadde = {
   metin: string
   path: string | null
 }
-
-function getSnippet(metin: string, query: string): string {
-  if (!query.trim()) return metin.slice(0, 240)
-  const idx = metin.toLowerCase().indexOf(query.toLowerCase())
-  if (idx === -1) return metin.slice(0, 240)
-  const start = Math.max(0, idx - 100)
-  const end = Math.min(metin.length, idx + query.length + 140)
-  return (start > 0 ? '…' : '') + metin.slice(start, end) + (end < metin.length ? '…' : '')
-}
-
 
 export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
   maddeler: Madde[]
@@ -128,24 +117,17 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
                 {results.length} sonuç
               </p>
               <div className="surface divide-y divide-[var(--border)] overflow-hidden">
-                {results.map(m => {
-                  const derived = deriveMaddeTitle(m.baslik, m.path)
-                  return (
-                    <div key={m.id} className="p-1">
-                      <MaddeListItem
-                        kanunId={kanunId}
-                        maddeId={m.id}
-                        maddeNo={m.madde_no}
-                        baslik={derived.title}
-                        pathLabel={derived.parentPath}
-                        snippet={getSnippet(m.metin, query)}
-                        highlightQuery={query}
-                        hasNote={noteSet.has(String(m.id))}
-                        cs={cs}
-                      />
-                    </div>
-                  )
-                })}
+                {results.map(m => (
+                  <MaddeInlineView
+                    key={m.id}
+                    maddeId={m.id}
+                    maddeNo={m.madde_no}
+                    baslik={m.baslik}
+                    path={m.path}
+                    hasNote={noteSet.has(String(m.id))}
+                    cs={cs}
+                  />
+                ))}
               </div>
             </>
           )}
