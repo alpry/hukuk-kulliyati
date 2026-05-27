@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import { Search, X, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import KanunAccordion from './KanunAccordion'
-import MaddeInlineView from './MaddeInlineView'
+import MaddeListItem from './MaddeListItem'
+import { snippet } from '@/lib/highlight'
 import type { ColorScheme } from '@/lib/kanun-colors'
 
 type Madde = {
@@ -64,7 +65,7 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
         .from('maddeler')
         .select('id, madde_no, baslik, metin, path')
         .eq('kanun_id', kanunId)
-        .or(`metin.ilike.${p},baslik.ilike.${p},path.ilike.${p}`)
+        .ilike('metin', p)
         .order('madde_no')
         .limit(30)
     }
@@ -118,13 +119,15 @@ export default function KanunView({ maddeler, kanunId, noteIds, colorScheme }: {
               </p>
               <div className="surface divide-y divide-[var(--border)] overflow-hidden">
                 {results.map(m => (
-                  <MaddeInlineView
+                  <MaddeListItem
                     key={m.id}
                     kanunId={kanunId}
                     maddeId={m.id}
                     maddeNo={m.madde_no}
                     baslik={m.baslik}
-                    path={m.path}
+                    pathLabel={m.path}
+                    snippet={snippet(m.metin, query)}
+                    highlightQuery={query}
                     hasNote={noteSet.has(String(m.id))}
                     cs={cs}
                   />

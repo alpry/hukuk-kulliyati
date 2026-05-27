@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Search, Loader2, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { Highlight, snippet } from '@/lib/highlight'
 
 type Result = {
   id: string
@@ -16,15 +17,6 @@ type Result = {
 }
 
 type KanunMini = { kanun_id: number; baslik: string }
-
-function snippet(text: string, q: string): string {
-  if (!q.trim()) return text.slice(0, 220)
-  const idx = text.toLowerCase().indexOf(q.toLowerCase())
-  if (idx === -1) return text.slice(0, 220)
-  const start = Math.max(0, idx - 80)
-  const end = Math.min(text.length, idx + q.length + 140)
-  return (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '')
-}
 
 export default function HomeSearch() {
   const [query, setQuery] = useState('')
@@ -101,7 +93,7 @@ export default function HomeSearch() {
         const { data: rows } = await supabase
           .from('maddeler')
           .select('id, madde_no, baslik, metin, path, kanun_id')
-          .or(`metin.ilike.${p},baslik.ilike.${p},path.ilike.${p}`)
+          .ilike('metin', p)
           .limit(20)
         data = (rows || []).map(r => ({ ...r, kanunBaslik: kanunMapRef.current.get(Number(r.kanun_id)) || '' })) as Result[]
       }
@@ -164,7 +156,9 @@ export default function HomeSearch() {
                       <span className="text-[11px] text-muted truncate">{r.kanunBaslik}</span>
                     </div>
                     {r.baslik && <p className="text-[12px] font-medium mb-0.5 truncate">{r.baslik}</p>}
-                    <p className="text-[11px] text-subtle line-clamp-2">{snippet(r.metin, query)}</p>
+                    <p className="text-[11px] text-subtle line-clamp-2">
+                      <Highlight text={snippet(r.metin, query)} query={query} />
+                    </p>
                   </Link>
                 </li>
               ))}

@@ -2,25 +2,8 @@
 
 import Link from 'next/link'
 import { ArrowRight, StickyNote } from 'lucide-react'
+import { Highlight } from '@/lib/highlight'
 import type { ColorScheme } from '@/lib/kanun-colors'
-
-function escapeRegex(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function Highlight({ text, query }: { text: string; query?: string }) {
-  if (!query?.trim()) return <>{text}</>
-  const parts = text.split(new RegExp(`(${escapeRegex(query)})`, 'gi'))
-  return (
-    <>
-      {parts.map((part, i) =>
-        part.toLowerCase() === query.toLowerCase()
-          ? <mark key={i} className="bg-yellow-100 text-yellow-900 rounded-[3px] px-0.5">{part}</mark>
-          : <span key={i}>{part}</span>
-      )}
-    </>
-  )
-}
 
 export type MaddeListItemProps = {
   kanunId: string | number
