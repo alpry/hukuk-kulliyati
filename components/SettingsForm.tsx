@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Sun, Moon, Type, FileDown, KeyRound, Mail, Eye, Search, Bell, Notebook } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Sun, Moon, Type, FileDown, KeyRound, Mail, Eye, Search, Bell, Notebook, Check, Palette } from 'lucide-react'
 import { useSettings } from '@/lib/settings-context'
 import { type AyarlarJson, type YaziBoyutu } from '@/lib/settings'
+import { TEMA_RENKLERI, type TemaRenk, applyTemaRenk, getInitialTemaRenk } from '@/lib/tema-renk'
 import LogoutButton from './LogoutButton'
 import { createClient } from '@/lib/supabase/client'
 
@@ -59,6 +60,16 @@ export default function SettingsForm({ email }: { email: string }) {
   const { ayarlar, setTema, setYaziBoyutu, setToggle } = useSettings()
   const [pwLoading, setPwLoading] = useState(false)
   const [pwMsg, setPwMsg] = useState<string | null>(null)
+  const [temaRenk, setTemaRenk] = useState<TemaRenk>('mor')
+
+  useEffect(() => {
+    setTemaRenk(getInitialTemaRenk())
+  }, [])
+
+  function handleTemaRenk(r: TemaRenk) {
+    setTemaRenk(r)
+    applyTemaRenk(r)
+  }
 
   async function handlePasswordReset() {
     setPwLoading(true)
@@ -110,6 +121,39 @@ export default function SettingsForm({ email }: { email: string }) {
             <SegBtn active={ayarlar.tema === 'dark'} onClick={() => setTema('dark')}>
               <span className="inline-flex items-center gap-1"><Moon className="w-3 h-3" />Koyu</span>
             </SegBtn>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-4 py-1">
+          <div>
+            <p className="text-[12px] font-medium flex items-center gap-1.5">
+              <Palette className="w-3.5 h-3.5 text-subtle" strokeWidth={1.75} />
+              Tema Rengi
+            </p>
+            <p className="text-[11px] text-subtle mt-0.5">Arayüzdeki vurgu rengi.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {TEMA_RENKLERI.map(t => {
+              const selected = temaRenk === t.id
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleTemaRenk(t.id)}
+                  aria-label={t.label}
+                  aria-pressed={selected}
+                  title={t.label}
+                  className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                  style={{
+                    backgroundColor: t.hex,
+                    boxShadow: selected
+                      ? `0 0 0 2px var(--background), 0 0 0 4px ${t.hex}`
+                      : '0 1px 2px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  {selected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                </button>
+              )
+            })}
           </div>
         </div>
         <div className="flex items-center justify-between gap-4 py-1">
