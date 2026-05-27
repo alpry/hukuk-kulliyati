@@ -45,3 +45,4 @@ scripts/inspect-madde.mjs
 scripts/verify-titles.mjs
 
 .vercel
+supabase/.temp
