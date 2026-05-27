@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ArrowRight, Star, Trash2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export type FavRow = {
   id: string
@@ -19,6 +21,7 @@ export type FavRow = {
 }
 
 export default function FavorilerList({ favoriler: initial }: { favoriler: FavRow[] }) {
+  const router = useRouter()
   const [items, setItems] = useState(initial)
   const [removing, setRemoving] = useState<Set<string>>(new Set())
 
@@ -27,22 +30,28 @@ export default function FavorilerList({ favoriler: initial }: { favoriler: FavRo
     e.stopPropagation()
     if (removing.has(fav.id)) return
     setRemoving(prev => new Set(prev).add(fav.id))
-    try {
-      const res = await fetch('/api/favoriler', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maddeId: fav.madde_id }),
+
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setRemoving(prev => {
+        const next = new Set(prev)
+        next.delete(fav.id)
+        return next
       })
-      if (res.ok) {
-        setItems(prev => prev.filter(x => x.id !== fav.id))
-      } else {
-        setRemoving(prev => {
-          const next = new Set(prev)
-          next.delete(fav.id)
-          return next
-        })
-      }
-    } catch {
+      return
+    }
+
+    const { error } = await supabase
+      .from('favoriler')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('madde_id', fav.madde_id)
+
+    if (!error) {
+      setItems(prev => prev.filter(x => x.id !== fav.id))
+      router.refresh()
+    } else {
       setRemoving(prev => {
         const next = new Set(prev)
         next.delete(fav.id)
